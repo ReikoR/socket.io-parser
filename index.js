@@ -176,7 +176,16 @@ function encodeAsString(obj) {
   // json data
   if (null != obj.data) {
     if (nsp) str += ',';
-    str += json.stringify(obj.data);
+    str += json.stringify(obj.data, function (key, value) {
+      if (value === Infinity) {
+        return 'Infinity';
+      } else if (value === -Infinity) {
+        return '-Infinity';
+      } else if (value !== value) {
+        return 'NaN';
+      }
+      return value;
+    });
   }
 
   debug('encoded %j as %s', obj, str);
@@ -324,7 +333,16 @@ function decodeString(str) {
   // look up json data
   if (str.charAt(++i)) {
     try {
-      p.data = json.parse(str.substr(i));
+      p.data = json.parse(str.substr(i), function (key, value) {
+        if (value === 'Infinity') {
+          return Infinity;
+        } else if (value === '-Infinity') {
+          return -Infinity;
+        } else if (value === 'NaN') {
+          return NaN;
+        }
+        return value;
+      });
     } catch(e){
       return error();
     }
